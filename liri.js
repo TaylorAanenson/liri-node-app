@@ -11,46 +11,92 @@ var ombd = require('request');
 var movie = fluidInput.join('+');
 var fs = require('fs');
 
-// If command == my-tweets
-if (command == 'my-tweets' && staticInput == null){
-    client.get('statuses/user_timeline', params, function(error, tweets, response) {
-        if (!error) {
-          console.log(tweets);
+app(command, staticInput, fluidInput);
+function app(command, staticInput, fluidInput){
+
+    switch(command){
+
+        case 'my-tweets':
+        twitterDisplay();
+        break;
+
+        case 'spotify-this-song':
+        var song = fluidInput;
+        if(staticInput == null){
+            songSet();
+        }else{
+            songSearch(song);
         }
-      });
+        break;
+
+        case 'movie-this':
+        var movie = fluidInput;
+        if(staticInput == null){
+            movieSet();
+        }else{
+            movieSearch(movie);
+        }
+        break;
+
+        case 'do-what-it-says':
+        randomTxt();
+        break;
+        
+    }
 }
 
-// If command == spotify-this-song
-if (command == 'spotify-this-song' && staticInput == null){
+// Tweet displayer
+function twitterDisplay(){
+    var params = {screen_name: 'nodejs'};
+    client.get('statuses/user_timeline', params, function(error, tweets) {
+        if (!error) {
+            for (var i=0;i<20;i++){
+                console.log('--------------------------------------------------------------------------------');
+                console.log(tweets[i].text);
+                console.log(tweets[i].created_at);
+                console.log('--------------------------------------------------------------------------------');
+            }
+        }
+    });
+}
+
+// Spotify search
+function songSet(){
     spotify
     .search({ type: 'track'||'artist', query: 'the sign'&&'ace of base' })
-    .then(function(response) {
+    .then(function(response){
+        console.log('--------------------------------------------------------------------------------');
         console.log("Artist: "+response.tracks.items[0].artists[0].name);
         console.log("Song name: "+response.tracks.items[0].name);
         console.log("Link to album: "+response.tracks.items[0].album.external_urls.spotify);
         console.log("Album's name: "+response.tracks.items[0].album.name);
+        console.log('--------------------------------------------------------------------------------');
     })
     .catch(function(err) {
       console.log(err);
     });
-}else if (command == 'spotify-this-song' && staticInput != null){
+}
+function songSearch(song){
     spotify
-    .search({ type: 'track'||'artist', query: JSON.stringify(fluidInput) })
-    .then(function(response) {
-      console.log("Artist: "+response.tracks.items[0].artists[0].name);
-      console.log("Song name: "+response.tracks.items[0].name);
-      console.log("Link to album: "+response.tracks.items[0].album.external_urls.spotify);
-      console.log("Album's name: "+response.tracks.items[0].album.name);
+    .search({ type: 'track'||'artist', query: JSON.stringify(song) })
+    .then(function(response){
+        console.log('--------------------------------------------------------------------------------');
+        console.log("Artist: "+response.tracks.items[0].artists[0].name);
+        console.log("Song name: "+response.tracks.items[0].name);
+        console.log("Link to album: "+response.tracks.items[0].album.external_urls.spotify);
+        console.log("Album's name: "+response.tracks.items[0].album.name);
+        console.log('--------------------------------------------------------------------------------');
     })
     .catch(function(err) {
-      console.log(err);
+        console.log(err);
     });
 }
 
-// If command == movie-this
-if (command == 'movie-this' && staticInput == null){
+// OMDB Search
+function movieSet(){
     ombd("http://www.omdbapi.com/?t=mr+nobody&y=&plot=short&apikey=trilogy", function(error, response, body) {
-        if (!error && response.statusCode === 200) {
+        if (!error && response.statusCode === 200){
+            console.log('--------------------------------------------------------------------------------');
             console.log("Title: "+JSON.parse(body).Title);
             console.log("Year Released: "+JSON.parse(body).Year);
             console.log("IMDB Rating: "+JSON.parse(body).Ratings[0].Value);
@@ -59,11 +105,14 @@ if (command == 'movie-this' && staticInput == null){
             console.log("Languages: "+JSON.parse(body).Language);
             console.log("Plot: "+JSON.parse(body).Plot);
             console.log("Actors: "+JSON.parse(body).Actors);
+            console.log('--------------------------------------------------------------------------------');
         }
     });
-}else if (command == 'movie-this' && staticInput != null){
+}
+function movieSearch(movie){
     ombd("http://www.omdbapi.com/?t="+movie+"&y=&plot=short&apikey=trilogy", function(error, response, body) {
-        if (!error && response.statusCode === 200) {
+        if (!error && response.statusCode === 200){
+            console.log('--------------------------------------------------------------------------------');
             console.log("Title: "+JSON.parse(body).Title);
             console.log("Year Released: "+JSON.parse(body).Year);
             console.log("IMDB Rating: "+JSON.parse(body).Ratings[0].Value);
@@ -72,17 +121,20 @@ if (command == 'movie-this' && staticInput == null){
             console.log("Languages: "+JSON.parse(body).Language);
             console.log("Plot: "+JSON.parse(body).Plot);
             console.log("Actors: "+JSON.parse(body).Actors);
+            console.log('--------------------------------------------------------------------------------');
         }
     });
 }
 
-// If command == do-what-it-says
-var exec = require('child-process');
-var a = exec.fork()
-if (command == 'do-what-it-says' && staticInput == null){
+// Random.txt Search
+function randomTxt(){
     fs.readFile("random.txt","utf8", function(error,data){
-        if(!error){
-            child = exec('node liri.js'+data);
+        if (!error){
+            var arr = data.split(',');
+            command = arr[0];
+            fluidInput = arr[1];
+            console.log(command,fluidInput);
+            app(command, fluidInput);
         }
     });
 }
