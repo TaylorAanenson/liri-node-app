@@ -11,6 +11,7 @@ var ombd = require('request');
 var movie = fluidInput.join('+');
 var fs = require('fs');
 
+// Main application function
 app(command, staticInput, fluidInput);
 function app(command, staticInput, fluidInput){
 
@@ -134,7 +135,7 @@ function randomTxt(){
             command = arr[0];
             fluidInput = arr[1];
             console.log(command,fluidInput);
-            app(command, fluidInput);
+            app(command, '' , fluidInput);
         }
     });
 }
